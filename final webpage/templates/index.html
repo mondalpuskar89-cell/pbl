@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Event Manager</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+</head>
+<body>
+<header><div class="brand">🎓 CampusConnect</div><nav><a href="/">Home</a><a href="/analysis">Feedback Analysis</a></nav></header>
+<main>
+  <section class="hero"><div><p class="eyebrow">UNIVERSITY EVENT PORTAL</p><h1>Manage events.<br><span>Bring campus together.</span></h1><p class="sub">Create events, register students and collect feedback in one simple place.</p></div><div class="hero-icon">🎉</div></section>
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="notice {{ category }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+  <section class="stats">
+    <div class="stat"><small>TOTAL EVENTS</small><strong>{{ events|length }}</strong></div>
+    <div class="stat"><small>REGISTRATIONS</small><strong>{{ registrations|length }}</strong></div>
+    <div class="stat"><small>FEEDBACK RECEIVED</small><strong>{{ feedback_count }}</strong></div>
+    <div class="stat"><small>AVERAGE RATING</small><strong>{{ average }} ⭐</strong></div>
+  </section>
+  <section class="section-heading"><div><p class="eyebrow">OVERVIEW</p><h2>Campus events</h2></div></section>
+  <section class="event-grid">
+    {% for e in events %}
+    <article class="event-card"><div class="event-top"><span class="event-tag">{{ e.event_id }}</span><span class="date">{{ e.date }}</span></div><h3>{{ e.name }}</h3><p>📍 {{ e.venue }}</p><div class="capacity"><span>{{ e.registered }} registered</span><span>{{ e.seats_left }} seats left</span></div><div class="bar"><i style="width: {{ (e.registered / (e.max_participants|int) * 100) if e.max_participants|int else 0 }}%"></i></div></article>
+    {% else %}<div class="empty">No events yet. Create your first event below.</div>{% endfor %}
+  </section>
+  <section class="section-heading"><div><p class="eyebrow">MANAGEMENT</p><h2>Quick actions</h2></div></section>
+  <section class="form-grid">
+    <article class="panel"><h3>➕ Create an event</h3><form action="/add_event" method="post">
+      <label>Event ID</label><input name="event_id" placeholder="Example: E101" required>
+      <label>Event name</label><input name="name" placeholder="Cultural Fest" required>
+      <label>Date</label><input type="date" name="date" required>
+      <label>Venue</label><input name="venue" placeholder="Main Hall" required>
+      <label>Maximum participants</label><input type="number" name="max_participants" min="1" placeholder="100" required>
+      <button>Create event</button></form></article>
+    <article class="panel"><h3>📝 Register a student</h3><form action="/register" method="post">
+      <label>Student ID</label><input name="student_id" placeholder="S101" required>
+      <label>Student name</label><input name="student_name" placeholder="Student name" required>
+      <label>Email</label><input type="email" name="email" placeholder="student@email.com" required>
+      <label>Department</label><input name="department" placeholder="CSE" required>
+      <label>Select event</label><select name="event_id" required><option value="">Choose event</option>{% for e in events %}<option value="{{ e.event_id }}">{{ e.event_id }} — {{ e.name }}</option>{% endfor %}</select>
+      <button>Register student</button></form></article>
+    <article class="panel"><h3>🔎 Search a student</h3><form action="/search" method="post">
+      <label>Student ID</label><input name="student_id" placeholder="S101" required><button>Search student</button></form>
+      {% if search_result is not none %}{% if search_result %}<div class="result"><b>{{ search_result.name }}</b><br>{{ search_result.student_id }} · {{ search_result.department }}<br>{{ search_result.email }}<br><small>Events: {{ search_result.event_ids|join(', ') if search_result.event_ids else 'No registrations' }}</small></div>{% else %}<div class="result">Student not found.</div>{% endif %}{% endif %}
+    </article>
+    <article class="panel"><h3>✖ Cancel registration</h3><form action="/cancel" method="post">
+      <label>Student ID</label><input name="student_id" placeholder="S101" required>
+      <label>Event ID</label><input name="event_id" placeholder="E101" required><button class="secondary">Cancel registration</button></form></article>
+    <article class="panel"><h3>⭐ Submit feedback</h3><form action="/feedback" method="post">
+      <label>Student ID</label><input name="student_id" placeholder="S101" required>
+      <label>Event ID</label><input name="event_id" placeholder="E101" required>
+      <label>Rating (1 to 5)</label><select name="rating"><option value="5">5 - Excellent</option><option value="4">4 - Very good</option><option value="3">3 - Good</option><option value="2">2 - Average</option><option value="1">1 - Poor</option></select><button>Save feedback</button></form></article>
+    <article class="panel chart-panel"><h3>📊 Participation chart</h3><img src="{{ url_for('static', filename='participation.png') }}" alt="Event participation chart"><a class="text-link" href="/analysis">View full analysis →</a></article>
+  </section>
+  <footer>CampusConnect · Campus Event Management & Feedback Analyzer</footer>
+</main>
+</body></html>
